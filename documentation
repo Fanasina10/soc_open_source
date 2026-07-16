@@ -1,0 +1,348 @@
+# Mise en place d'un SOC Open Source pour la détection et la réponse aux incidents de sécurité
+
+## Présentation du projet
+
+Ce projet consiste à concevoir et déployer un environnement **SOC (Security Operations Center) Open Source** permettant la **surveillance de la sécurité**, la **détection des menaces**, l'**analyse des incidents** et la **réponse aux événements de sécurité**.
+
+L'objectif est de mettre en place une chaîne complète de supervision et de réponse aux incidents basée sur des solutions open source :
+
+* **SIEM** pour la collecte, la corrélation et l'analyse des événements de sécurité.
+* **IDS/IPS** pour la détection des activités réseau suspectes.
+* **SOAR** pour l'automatisation des réponses aux incidents.
+* **Threat Intelligence Platform** pour l'enrichissement des alertes.
+* **Plateforme de gestion d'incidents** pour le suivi et la collaboration entre analystes sécurité.
+
+---
+
+# Objectifs
+
+Les objectifs principaux de ce projet sont :
+
+* Mettre en place un SOC entièrement basé sur des solutions open source.
+* Centraliser la collecte des logs provenant des systèmes surveillés.
+* Détecter les comportements suspects et les attaques réseau.
+* Analyser et qualifier les alertes de sécurité.
+* Enrichir automatiquement les incidents avec des sources de Threat Intelligence.
+* Automatiser certaines actions de réponse.
+* Simuler un processus complet de traitement d'un incident de sécurité.
+
+---
+
+# Architecture générale
+
+L'architecture mise en place suit le processus suivant :
+
+```text
+                    Sources de logs
+                         |
+        ------------------------------------
+        |                                  |
+ Windows/Linux Agents              Trafic réseau
+        |                                  |
+        |                                  |
+      Wazuh                         Suricata
+        |                                  |
+        |                                  |
+        +---------------+------------------+
+                        |
+                        |
+                    Alertes sécurité
+                        |
+                        |
+                    Shuffle SOAR
+                        |
+        +---------------+---------------+
+        |                               |
+     TheHive                         Cortex
+        |                               |
+ Gestion incidents              Analyse automatique
+        |
+        |
+      MISP
+        |
+ Threat Intelligence
+```
+
+---
+
+# Environnement technique
+
+## SIEM et collecte de logs
+
+### Wazuh
+
+Wazuh est utilisé comme plateforme principale de supervision sécurité.
+
+Rôles :
+
+* Collecte des logs systèmes.
+* Surveillance des endpoints.
+* Analyse des événements de sécurité.
+* Détection des comportements suspects.
+* Gestion des alertes.
+* Surveillance de l'intégrité des fichiers (FIM).
+* Détection des vulnérabilités.
+
+Sources surveillées :
+
+* Machines Linux.
+* Machines Windows.
+* Journaux systèmes.
+* Événements de sécurité.
+
+---
+
+# Détection réseau
+
+## Suricata IDS/IPS
+
+Suricata est utilisé comme moteur de détection réseau.
+
+Fonctions :
+
+* Analyse du trafic réseau.
+* Détection des signatures d'attaques.
+* Identification des comportements suspects.
+* Génération d'alertes de sécurité.
+
+Exemples de détection :
+
+* Scan réseau.
+* Tentatives d'intrusion.
+* Communication avec des domaines malveillants.
+* Activités réseau anormales.
+
+Les événements Suricata sont ensuite intégrés dans le processus d'analyse du SOC.
+
+---
+
+# Gestion des incidents
+
+## TheHive
+
+TheHive est utilisé comme plateforme de gestion des incidents de sécurité.
+
+Fonctions :
+
+* Création et suivi des incidents.
+* Attribution des tâches aux analystes.
+* Organisation des investigations.
+* Gestion du cycle de vie des alertes.
+
+Workflow :
+
+```text
+Alerte sécurité
+       |
+       |
+Création d'un Case TheHive
+       |
+       |
+Investigation
+       |
+       |
+Résolution de l'incident
+```
+
+---
+
+# Analyse et réponse
+
+## Cortex
+
+Cortex est utilisé pour automatiser l'analyse des indicateurs de compromission (IOC).
+
+Il permet d'exécuter des analyseurs et des responders.
+
+### Analyseurs utilisés
+
+Exemples :
+
+### VirusTotal Analyzer
+
+Objectif :
+
+* Vérifier si une IP, un domaine ou un fichier est connu comme malveillant.
+
+---
+
+### AbuseIPDB Analyzer
+
+Objectif :
+
+* Vérifier la réputation d'une adresse IP.
+* Identifier les IP signalées comme malveillantes.
+
+---
+
+Autres analyses possibles :
+
+* Analyse de fichiers suspects.
+* Analyse d'adresses IP.
+* Analyse de domaines.
+* Recherche d'indicateurs de compromission.
+
+---
+
+# Threat Intelligence
+
+## MISP
+
+MISP est utilisé comme plateforme de renseignement sur les menaces.
+
+Fonctions :
+
+* Stockage des IOC.
+* Partage d'informations sur les menaces.
+* Corrélation entre événements.
+* Enrichissement des investigations.
+
+Types d'indicateurs :
+
+* Adresse IP malveillante.
+* Domaine suspect.
+* Hash de fichier.
+* URL malveillante.
+
+---
+
+# Automatisation des réponses
+
+## Shuffle SOAR
+
+Shuffle est utilisé comme moteur d'orchestration et d'automatisation.
+
+Son rôle est de déclencher automatiquement des actions suite à une alerte.
+
+Exemple de scénario :
+
+```text
+Détection Wazuh
+       |
+       |
+Envoi de l'alerte à Shuffle
+       |
+       |
+Création d'un incident TheHive
+       |
+       |
+Analyse IP avec Cortex
+       |
+       |
+Consultation VirusTotal / AbuseIPDB
+       |
+       |
+Décision automatique
+       |
+       |
+Réponse :
+- Blocage IP
+- Notification équipe sécurité
+- Mise à jour incident
+```
+
+---
+
+# Scénarios de tests réalisés
+
+## Scénario 1 : Détection d'une activité suspecte
+
+Étapes :
+
+1. Génération d'un événement de sécurité.
+2. Collecte par l'agent Wazuh.
+3. Analyse par le SIEM.
+4. Génération d'une alerte.
+5. Transmission vers Shuffle.
+
+Résultat :
+
+L'événement est détecté et visible dans le tableau de bord Wazuh.
+
+---
+
+## Scénario 2 : Analyse d'une adresse IP suspecte
+
+Étapes :
+
+1. Réception d'une alerte contenant une IP.
+2. Envoi automatique vers Cortex.
+3. Analyse avec VirusTotal et AbuseIPDB.
+4. Enrichissement de l'incident dans TheHive.
+
+Résultat :
+
+L'analyste obtient des informations supplémentaires permettant de qualifier la menace.
+
+---
+
+## Scénario 3 : Réponse automatisée
+
+Processus :
+
+```text
+Alerte critique
+       |
+       |
+Shuffle
+       |
+       |
+Analyse IOC
+       |
+       |
+Blocage automatique
+       |
+       |
+Notification
+```
+
+Objectif :
+
+Réduire le temps de réaction face aux incidents.
+
+---
+
+# Résultats obtenus
+
+Le projet a permis de mettre en place une architecture SOC fonctionnelle permettant :
+
+* La centralisation des événements de sécurité.
+* La surveillance des endpoints.
+* La détection des attaques réseau.
+* L'analyse automatique des indicateurs de compromission.
+* L'enrichissement des alertes grâce à la Threat Intelligence.
+* La gestion complète des incidents.
+* L'automatisation des réponses de sécurité.
+
+---
+
+# Compétences développées
+
+* Administration de solutions SIEM.
+* Analyse des logs de sécurité.
+* Détection d'incidents.
+* Investigation numérique.
+* Threat Intelligence.
+* IDS/IPS.
+* SOAR et automatisation.
+* Gestion du cycle de vie des incidents.
+* Architecture SOC.
+
+---
+
+# Améliorations possibles
+
+* Ajouter davantage de règles de détection personnalisées.
+* Connecter davantage de sources de logs.
+* Ajouter une supervision de l'infrastructure SOC.
+* Automatiser davantage les actions de remédiation.
+* Ajouter une authentification centralisée.
+* Mettre en place des tableaux de bord SOC personnalisés.
+
+---
+
+# Conclusion
+
+Ce projet a permis de construire un environnement SOC Open Source complet intégrant les différentes étapes du traitement d'un incident de sécurité : de la collecte des événements jusqu'à la réponse automatisée.
+
+L'intégration de Wazuh, Suricata, TheHive, Cortex, MISP et Shuffle permet d'obtenir une architecture proche des environnements SOC professionnels tout en utilisant uniquement des solutions open source.
